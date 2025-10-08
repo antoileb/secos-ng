@@ -14,7 +14,8 @@ CFLG_FP    := -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-ssse3 -mno-sse4.1 \
               -mno-sse4.2 -mno-sse4 -mno-avx -mno-avx2 -mno-aes -mno-pclmul \
               -mno-fsgsbase -mno-rdrnd -mno-f16c -mno-fma -mno-sse4a \
               -mno-fma4 -mno-xop -mno-lwp -mno-3dnow -mno-popcnt \
-              -mno-abm -mno-bmi -mno-bmi2 -mno-lzcnt -mno-tbm
+              -mno-abm -mno-bmi -mno-bmi2 -mno-lzcnt -mno-tbm \
+			  -std=c17 -fasm
 
 CFLG_32    := -m32 -g -fno-pic
 CFLG_WRN   := -Wall -W -Werror
@@ -48,7 +49,10 @@ LDSCRIPT   := ../utils/linker.lds
 TARGET     := kernel.elf
 
 # Qemu options
-QEMU := $(shell which qemu-system-i386)
+# QEMU := $(shell which qemu-system-i386)
+QEMU := $(shell which kvm) #TP 1
+
+
 #QEMU := $(shell which kvm)
 QFDA := -drive media=disk,format=raw,if=floppy,file=../utils/grub.floppy
 QHDD := -drive media=disk,format=raw,if=ide,index=0,file=fat:rw:.
