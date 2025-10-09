@@ -39,9 +39,15 @@ point d'entrée du noyau.
   de base de la GDT en cours d'utilisation ainsi que sa "limite" (type utile :
   `gdt_reg_t`).**
 
+réponse: 
+- sgdt prend en paramètre une adresse mémoire et y écrit la valeur du registre GDTR, ie l'addresse de la gdt
+- l226
+
 **Q2\* :  Dans [`tp.c`](./tp.c), un exemple d'implémentation d'affichage du
   contenu de table de type GDT est fournie (fonction `print_gdt_content`).
   L'utiliser pour afficher le contenu de la GDT courante.**
+
+réponse: code uniquement
 
 **Q3 : Lire les valeurs des sélecteurs de segment à l'aide des macros prévues
   à cet effet dans [`kernel/include/segmem.h`](../kernel/include/segmem.h), et en déduire quels descripteurs de cette GDT sont en
@@ -52,9 +58,13 @@ point d'entrée du noyau.
 * Le segment de pile (sélecteur ss)
 * D'autres segments (sélecteurs autres : es, fs, gs, etc.)
 
+cs=8 -> selecteur 1 (code en Exe/read)
+tout les autres=16-> selecteur 2 (data en rw/access)
+
 **Q4 : Que constate-t-on ? Que dire de la ségrégation mémoire mise en place
   par défaut par GRUB avec une telle configuration ?**
 
+on a une segmentation flat
 
 ## Une première reconfiguration de la GDT : en mode "flat"
 
@@ -92,6 +102,9 @@ système relatifs à la segmentation : GDTR, cs/ss/ds/etc.
   DS. Que se passe-t-il ? Est-ce conforme avec ce que décrit la documentation
   Intel à ce sujet ? Faire de même avec un descripteur de segment de données
   pour le sélecteur CS.**
+
+DATA dans CS KO
+CODE dans DS OK car on peut le lire
 
 
 ## Exemple d'utilisation de la segmentation pour la sécurité
