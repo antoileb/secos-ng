@@ -60,7 +60,7 @@ générées.
 ## Prise en main de l'IDT
 
 **Q1\* : Dans tp.c, localiser l'IDT et afficher son adresse de chargement**
-  (cf. fonction `get_idtr()` définie dans [`segmem.h`](../kernel/include/segmem.h)).
+  (cf. fonction `get_idtr()` définie dans [`intr.h`](../kernel/include/intr.h)).
 
 ## Gestion furtive des breakpoints #BP
 
@@ -75,7 +75,7 @@ qu'elle puisse gérer l'exception #BP. Le but est de ne pas modifier
   l'écran.**
 
 **Q3 : Modifier le descripteur d'interruption (cf. type `int_desc_t` défini 
-  dans [`segmem.h`](../kernel/include/segmem.h)) de #BP, stocké
+  dans [`intr.h`](../kernel/include/intr.h)) de #BP, stocké
   dans l'IDT, afin d'y référencer `bp_handler()` à la place du trampoline
   déjà installé.**
 
@@ -104,6 +104,7 @@ de l'essai précédent.
 
 **Quelle signification cette valeur a-t-elle ? S'aider à nouveau de `objdump -D`
 pour comparer cette valeur à une adresse de votre noyau.**
+
 
 **Q8\* : Qu'est-ce qui n'est pas stocké par le CPU à l'arrivée d'une
   interruption et qu'il est impératif de sauvegarder avant tout traitement de
