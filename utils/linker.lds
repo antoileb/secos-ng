@@ -27,4 +27,11 @@ SECTIONS
    /DISCARD/ : { *(.note* .indent .comment)      } : phsetup
 
    __kernel_end__ = .;
+
+   . = 0x400000;
+   .usr     : { *(.usr)                          } 
+
+   . = 0x800000;
+   .usrdata : { KEEP(*(.usrdata))                }  
+
 }
