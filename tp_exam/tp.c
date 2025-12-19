@@ -8,8 +8,8 @@
 #define __usrdata__ __attribute__((section(".usrdata")))
 
 #define PGD_KERN  0x100000
-#define PGD_USER1 0x410000
-#define PGD_USER2 0x420000
+#define PGD_USER1 0x180000
+#define PGD_USER2 0x200000
 #define SHARED_MEM_PHY_ADDR 0x800000
 #define USER1_SHARED_VIRT_ADDR 0xF100000
 #define USER2_SHARED_VIRT_ADDR 0xF200000
