@@ -16,7 +16,7 @@
 #define SHARED_MEM_PHY_ADDR					0x800000
 #define USER1_SHARED_VIRT_ADDR 				0xF100000
 #define USER2_SHARED_VIRT_ADDR 				0xF200000
-#define SHARED_COUNTER SHARED_MEM_PHY_ADDR
+#define SHARED_COUNTER 						SHARED_MEM_PHY_ADDR
 #define STACK_USR1 							0x500000
 #define STACK_USR2 							0x600000
 #define STACK_KER_USR1 						0x2F0000
@@ -157,7 +157,7 @@ void task_sw_handler() {
 	PREV_TASK = CURRENT_TASK;
 	CURRENT_TASK = (CURRENT_TASK+1) % 2;
 
-	//debug("switching from task %d to task %d\n", PREV_TASK, CURRENT_TASK);
+	// debug("switching from task %d to task %d\n", PREV_TASK, CURRENT_TASK);
 
 	// ==== RESTORING THE NEXT TASK =====
 	set_cr3(TASKS[CURRENT_TASK].cr3);
@@ -321,9 +321,9 @@ void tp() {
 	memset((void*)pgd_kern, 0, PAGE_SIZE);
 	pte32_t* ptb_kern1 = (pte32_t*)(PGD_KERN + PAGE_SIZE);
 	for(int i=0;i<1024;i++) {
-		pg_set_entry(&ptb_kern1[i], PG_KRN|PG_RW, i);
+		pg_set_entry(&ptb_kern1[i], PG_KRN|PG_RO, i);
 	}
-	pg_set_entry(&pgd_kern[0], PG_KRN|PG_RW, page_get_nr(ptb_kern1));
+	pg_set_entry(&pgd_kern[0], PG_KRN|PG_RO, page_get_nr(ptb_kern1));
 
 	debug("PGD KERN SET\n");
 
@@ -334,9 +334,9 @@ void tp() {
 	// Kernel identity mapping
 	pte32_t* ptbX = (pte32_t*)(PGD_USER1 + PAGE_SIZE);
 	for(int i=0;i<1024;i++) {
-		pg_set_entry(&ptbX[i], PG_KRN|PG_RW, i);
+		pg_set_entry(&ptbX[i], PG_KRN|PG_RO, i);
 	}
-	pg_set_entry(&pgd_usr1[0], PG_KRN|PG_RW, page_get_nr(ptbX));
+	pg_set_entry(&pgd_usr1[0], PG_KRN|PG_RO, page_get_nr(ptbX));
 	
 	// User program identity mapping
 	pte32_t* ptb1 = (pte32_t*)(PGD_USER1 + 2*PAGE_SIZE);
@@ -363,9 +363,9 @@ void tp() {
 	// Kernel identity mapping
 	ptbX = (pte32_t*)(PGD_USER2 + PAGE_SIZE);
 	for(int i=0;i<1024;i++) {
-		pg_set_entry(&ptbX[i], PG_KRN|PG_RW, i);
+		pg_set_entry(&ptbX[i], PG_KRN|PG_RO, i);
 	}
-	pg_set_entry(&pgd_usr2[0], PG_KRN|PG_RW, page_get_nr(ptbX));
+	pg_set_entry(&pgd_usr2[0], PG_KRN|PG_RO, page_get_nr(ptbX));
 	
 	// User program identity mapping
 	pte32_t* ptb3 = (pte32_t*)(PGD_USER2 + 2*PAGE_SIZE);
@@ -380,8 +380,8 @@ void tp() {
 	pgd_idx = pd32_get_idx(target);
 	ptb_idx = pt32_get_idx(target);
 	memset((void*)ptb4, 0, PAGE_SIZE);
-	pg_set_entry(&ptb4[ptb_idx], PG_USR|PG_RW, page_get_nr(SHARED_MEM_PHY_ADDR));
-	pg_set_entry(&pgd_usr2[pgd_idx], PG_USR|PG_RW, page_get_nr(ptb4));
+	pg_set_entry(&ptb4[ptb_idx], PG_USR|PG_RO, page_get_nr(SHARED_MEM_PHY_ADDR));
+	pg_set_entry(&pgd_usr2[pgd_idx], PG_USR|PG_RO, page_get_nr(ptb4));
 	
 	debug("PGD USER2 SET\n");
 
