@@ -6,31 +6,31 @@
 #include <pagemem.h>
 #include <io.h>
 
-#define __usr__ __attribute__((section(".usr")))
-#define __usrdata__ __attribute__((section(".usrdata")))
+#define __usr__ 		__attribute__((section(".usr")))
+#define __usrdata__ 	__attribute__((section(".usrdata")))
 
 // Memory Mapping
-#define PGD_KERN  0x100000
-#define PGD_USER1 0x180000
-#define PGD_USER2 0x200000
-#define SHARED_MEM_PHY_ADDR 0x800000
-#define USER1_SHARED_VIRT_ADDR 0xF100000
-#define USER2_SHARED_VIRT_ADDR 0xF200000
+#define PGD_KERN  							0x100000
+#define PGD_USER1 							0x180000
+#define PGD_USER2 							0x200000
+#define SHARED_MEM_PHY_ADDR					0x800000
+#define USER1_SHARED_VIRT_ADDR 				0xF100000
+#define USER2_SHARED_VIRT_ADDR 				0xF200000
 #define SHARED_COUNTER SHARED_MEM_PHY_ADDR
-#define STACK_USR1 0x500000
-#define STACK_USR2 0x600000
-#define STACK_KER_USR1 0x2F0000
-#define STACK_KER_USR2 0x2A0000
+#define STACK_USR1 							0x500000
+#define STACK_USR2 							0x600000
+#define STACK_KER_USR1 						0x2F0000
+#define STACK_KER_USR2 						0x2A0000
 
 // Task ID
 #define U1_TID 0
 #define U2_TID 1
 
-#define c0_idx  1
-#define d0_idx  2
-#define c3_idx  3
-#define d3_idx  4
-#define ts_idx  5
+#define c0_idx 1
+#define d0_idx 2
+#define c3_idx 3
+#define d3_idx 4
+#define ts_idx 5
 
 #define c0_sel  gdt_krn_seg_sel(c0_idx)
 #define d0_sel  gdt_krn_seg_sel(d0_idx)
@@ -38,7 +38,10 @@
 #define d3_sel  gdt_usr_seg_sel(d3_idx)
 #define ts_sel  gdt_krn_seg_sel(ts_idx)
 
-
+// Time Quantum
+#define TIME_QUANTUM 10
+volatile uint32_t timer_ticks = 0;
+volatile uint8_t can_print = 0;
 
 typedef struct task_ctx
 {	
@@ -46,15 +49,14 @@ typedef struct task_ctx
 	uint32_t 	 s0ebp;
 
 	// registers
-	uint32_t	cr3;
-	uint32_t    eip;
-	uint32_t	esp;
-	uint32_t	ebp;
+	uint32_t	 cr3;
+	uint32_t     eip;
+	uint32_t	 esp;
+	uint32_t	 ebp;
 	eflags_reg_t eflags;
-	gpr_ctx_t	regs; // general purpose registers
+	gpr_ctx_t	 regs; // general purpose registers
 
 } __attribute__((packed)) task_ctx_t;
-
 
 
 
@@ -99,15 +101,23 @@ pde32_t* pgd_usr2 = (pde32_t*)PGD_USER2;
 #define c3_dsc(_d) gdt_flat_dsc(_d,3,SEG_DESC_CODE_XR)
 #define d3_dsc(_d) gdt_flat_dsc(_d,3,SEG_DESC_DATA_RW)
 
+
+
 void sys_cnt_handler() {
 	asm volatile (
 		"leave \n\t" 
 		"pusha"); // backup general purpose registers
 	uint32_t* addr;
 	asm volatile("mov %%ebx, %0":"=r"(addr)); // get counter's address from EBX register
-	debug("c = %d\n", *addr); // display value of shared counter
+
+	// Reduce display rate to not be flooded in the standard output
+	if (can_print) {
+        debug("c = %d\n", *addr); // display value of shared counter
+		can_print = 0;
+    }
+
 	asm volatile("popa \n\t" // restore and leave
-				  "iret");
+				 "iret");
 }
 
 void task_sw_handler() {
@@ -115,6 +125,14 @@ void task_sw_handler() {
 	asm volatile ("leave");
 	
 	force_interrupts_off(); // disable interrupts
+
+	// Update timer ticks number
+	timer_ticks++;
+	if (timer_ticks == TIME_QUANTUM) {
+		timer_ticks = 0;
+		// Update can_print flag
+		can_print = 1;
+	}
 	
 	// ===== BACKUP CURRENT TASK =====	
 	// backup task's GPRs
@@ -180,8 +198,6 @@ void task_sw_handler() {
 
 	// return to task
 	asm volatile ("iret");
-		
-
 }
 
 void init_gdt() {
@@ -208,7 +224,6 @@ void init_gdt() {
 }
 
 void init_idt() {
-	
 	idt_reg_t idtr;
 	get_idtr(idtr);
 
@@ -260,8 +275,8 @@ void sys_counter(uint32_t* addr) {
 __usr__
 void user1() {
 	// le compilo empile EBP en préambule de fonction ce qui decale la stack.
-	// donc on l'enlève (+simple que de devoir gérer dans le changement de contexte la "vrai" valeur de ebp
-	// puisque elle est statique)
+	// donc on l'enlève (+simple que de devoir gérer dans le changement de contexte
+	// la "vraie" valeur de ebp puisque elle est statique)
 	asm volatile("leave");
 	
 	// indefinitly increments a shared counter
@@ -408,5 +423,4 @@ void tp() {
 	while (1) {
 		asm volatile ("nop");
 	};
-
 }
